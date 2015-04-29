@@ -1,6 +1,7 @@
 .npmignore
 .gitignore
 .gitattributes
+*.md
 
 # Windows image file caches
 Thumbs.db
