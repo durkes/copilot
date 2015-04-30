@@ -39,13 +39,13 @@ var server = http.createServer(app).listen(3000);	// launch the server
 
 /*Example handler functions*/
 function routeHandler(req, res, next) {
-	if (true) res.end('Hi there!');	// respond to request if condition true
-	else next();					// otherwise, call next matching route
+	if (true) res.end('Hi there!');			// respond to request if condition true
+	else next();							// otherwise, call next matching route
 }
 
 function errorHandler(err, req, res, next) {
 	res.statusCode = 500;
-	res.end(err.toString());		// responded, so do not call next()
+	res.end(err.toString());				// responded, so do not call next()
 }
 ```
 
@@ -55,8 +55,8 @@ Routing in Copilot works by matching the requested URL path and HTTP method.
 app.use(METHOD, PATH, HANDLER);
 ```
 Every route **must** contain a route handler function, but method and path are optional.
- - If no method is defined, or method is defined as `'*'`, the route will match any/every method
- - If no path is defined, or the path is defined as `'/'`, the route will match any/every path
+ - If no method is defined, or method is defined as `'*'`, the route will match any method
+ - If no path is defined, or the path is defined as `'/'`, the route will match any path
 
 Method and path matching are **case insensitive**, and paths only need to match the prefix as long as the breakpoint character is a `/` or `.`. Furthermore, a trailing slash (`/`) in the route definition path has no effect.
 
@@ -68,7 +68,7 @@ app.use('/TEST', function (req, res, next) { ... });
 app.use('/test/', function (req, res, next) { ... });
 app.use('*', '/test', function (req, res, next) { ... });
 ```
-For example, requests to the following URLs would **match** the routes above:
+Requests to the following URLs would **match** the routes above:
  - http://www.example.com/test
  - http://www.example.com/TEST
  - http://www.example.com/test/
@@ -77,7 +77,7 @@ For example, requests to the following URLs would **match** the routes above:
  - http://www.example.com/test.anything...
  - http://www.example.com/test?query=string
 
-But requests to the following URLs would **not match** the routes above:
+Requests to the following URLs would **not match** the routes above:
  - ~~http://www.example.com/tes~~
  - ~~http://www.example.com/test1~~
  - ~~http://www.example.com/another/test~~
@@ -91,12 +91,12 @@ app.use('/test/one', function (req, res, next) { ... });
 app.use('/test', function (req, res, next) { ... });
 ```
 
-In this example, requests made to `http://www.example.com/test/one` will be handled by the first route, while requests to `http://www.example.com/test/two` will be handled by the second route.
+In this example, requests to `http://www.example.com/test/one` will be handled by the first route, while requests to `http://www.example.com/test/two` will be handled by the second route.
 
 If the route definitions were in reverse order, requests to `http://www.example.com/test/one` would be handled by the `/test` route first.
 
 #### next()
-Within your route handler functions, you must either respond to the request using `res.end()` (or middleware), or call `next()` to invoke the next matching route. This allows you to create a waterfall effect.
+Within your route handler functions, you must either respond to the request using `res.end()` (or middleware), or call `next()` to invoke the next matching route. This enables you to create a waterfall effect.
 
 Consider the following two catch-all routes:
 ```js
@@ -114,7 +114,7 @@ app.use(function (req, res, next) {
 	res.end('Hello!');
 });
 ```
-In this example, the first route will respond with "Down for maintenance" during the midnight hour. During other hours, the route logic will resolve to next() and invoke the second route to respond with "Hello!"
+In this example, the first route will respond with "Down for maintenance" during the midnight hour. During other hours, the route logic will resolve to `next()` and invoke the second route to respond with "Hello!"
 
 You should not call `next()` more than once from within a route handler.
 
@@ -125,7 +125,7 @@ Consider the following route definition:
 ```js
 app.use('/api', routeHandler);
 ```
-Now assume a GET request is made to `http://www.example.com/API/retrieve?name=John%20Doe&state=MO`. The `req` object will contain the following properties and values:
+For requests to `http://www.example.com/API/retrieve?name=John%20Doe&state=MO`, the `req` object will contain the following properties and values:
 ```js
 function routeHandler(req, res, next) {
 	req.path === '/API/retrieve'	// matches the current URL path
@@ -157,7 +157,7 @@ app.use('GET', '/api/retrieve', function (req, res, next) {
 	}
 	else {
 		/*otherwise error*/
-		var error = new Error('The id must be test.')
+		var error = new Error('Invalid request')
 		next(error);
 	}
 });
@@ -183,7 +183,8 @@ app.use('POST', bodyParser.urlencoded());
 app.use('/hello', function (req, res, next) {
 	res.end('Hi there!');
 });
-/*the above route will answer all requests to '/hello', '/hello.anything...', and '/hello/anything...'*/
+/*the above route will answer all requests to:
+'/hello', '/hello.anything...', and '/hello/anything...'*/
 
 app.use('GET', '/api/retrieve', function (req, res, next) {
 	if (req.query.id === 'test') {
@@ -205,8 +206,8 @@ app.use('GET', '/api/retrieve', function (req, res, next) {
 });
 
 app.use('/api/retrieve', function (req, res, next) {
-	/*now catch all requests to '/api/retrieve' route with methods other than GET (since GET requests would have been handled in one of the routes above)*/
-	/*note: there is likely middleware that could be used to better manage this; again, this is just for demo*/
+	/*now catch all requests to '/api/retrieve' route with methods other than GET
+	(since GET requests would have been handled by one of the routes above)*/
 	res.statusCode = 405;
 	res.end('Must use GET method');
 });
@@ -236,7 +237,8 @@ app.use(function (req, res, next) {
 });
 
 app.use('*', '/', function (req, res, next) {
-	/*this more verbose route definition is functionally identical to the one above; for demo purposes only*/
+	/*this more verbose route definition is functionally identical to the one above;
+	for demo purposes only*/
 	res.statusCode = 404;
 	res.end('Custom Not Found');
 });
@@ -261,7 +263,7 @@ In many cases your app will require functionality beyond Copilot's built-in capa
 Copilot is compatible with middleware for Express, Restify, and Connect.
 
 ## Fair warning
-Typically when an exception occurs in a Node app, the app crashes with a printed stack trace. With Copilot, however, if one of your routes throws an exception, the exception will be caught by the nearest error handler, keeping your app from crashing. This is good for obvious reasons, but can also be bad because it can allow misbehaving logic to go undetected.
+Typically when an exception occurs in a Node app, the app crashes with the printed stack trace. With Copilot, however, if one of your routes throws an exception, the exception will be caught by the nearest error handler, keeping your app from crashing. This is good for obvious reasons, but can also be bad because it can allow misbehaving logic to go undetected.
 
 For production environments, it is recommended that you implement custom logic within your error handlers to log the stack trace (err.stack) of unexpected errors and generate a notification.
 
