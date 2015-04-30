@@ -1,7 +1,7 @@
 {
   "name": "copilot",
-  "version": "0.3.0",
-  "description": "Copilot is a lighter, faster router for Node.js inspired by Express and Restify.",
+  "version": "0.3.1",
+  "description": "Copilot is a lighter, faster Node router inspired by Express, Restify, and Connect.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
