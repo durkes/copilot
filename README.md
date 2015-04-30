@@ -55,7 +55,7 @@ Routing in Copilot works by matching the requested URL path and HTTP method.
 app.use(METHOD, PATH, HANDLER);
 ```
 Every route **must** contain a route handler function, but method and path are optional.
- - If no method is defined, or method is defined as `'*'`, the route will match any method
+ - If no method is defined, or the method is defined as `'*'`, the route will match any method
  - If no path is defined, or the path is defined as `'/'`, the route will match any path
 
 Method and path matching are **case insensitive**, and paths only need to match the prefix as long as the breakpoint character is a `/` or `.`. Furthermore, a trailing slash (`/`) in the route definition path has no effect.
@@ -68,7 +68,7 @@ app.use('/TEST', function (req, res, next) { ... });
 app.use('/test/', function (req, res, next) { ... });
 app.use('*', '/test', function (req, res, next) { ... });
 ```
-Requests to the following URLs would **match** the routes above:
+Requests to these URLs would **match** the routes above:
  - http://www.example.com/test
  - http://www.example.com/TEST
  - http://www.example.com/test/
@@ -77,7 +77,7 @@ Requests to the following URLs would **match** the routes above:
  - http://www.example.com/test.anything...
  - http://www.example.com/test?query=string
 
-Requests to the following URLs would **not match** the routes above:
+But requests to these URLs would **not match**:
  - ~~http://www.example.com/tes~~
  - ~~http://www.example.com/test1~~
  - ~~http://www.example.com/another/test~~
@@ -96,7 +96,7 @@ In this example, requests to `http://www.example.com/test/one` will be handled b
 If the route definitions were in reverse order, requests to `http://www.example.com/test/one` would be handled by the `/test` route first.
 
 #### next()
-Within your route handler functions, you must either respond to the request using `res.end()` (or middleware), or call `next()` to invoke the next matching route. This enables you to create a waterfall effect.
+Within your route handler functions, you must either respond to requests using `res.end()` (or middleware), or call `next()` to invoke the next matching route. This enables you to create a waterfall effect.
 
 Consider the following two catch-all routes:
 ```js
@@ -114,7 +114,7 @@ app.use(function (req, res, next) {
 	res.end('Hello!');
 });
 ```
-In this example, the first route will respond with "Down for maintenance" during the midnight hour. During other hours, the route logic will resolve to `next()` and invoke the second route to respond with "Hello!"
+In this example, the first route will respond with "Down for maintenance" during the midnight hour. During other hours it will resolve to `next()` and invoke the second route to respond with "Hello!"
 
 You should not call `next()` more than once from within a route handler.
 
@@ -128,8 +128,8 @@ app.use('/api', routeHandler);
 For requests to `http://www.example.com/API/retrieve?name=John%20Doe&state=MO`, the `req` object will contain the following properties and values:
 ```js
 function routeHandler(req, res, next) {
-	req.path === '/API/retrieve'	// matches the current URL path
 	req.route === '/api' 			// matches your route definition
+	req.path === '/API/retrieve'	// matches the current URL path
 	req.query.name === 'John Doe'
 	req.query.state === 'MO'
 }
@@ -156,7 +156,7 @@ app.use('GET', '/api/retrieve', function (req, res, next) {
 		res.end(JSON.stringify({id: 'test', result: 'success'}));
 	}
 	else {
-		/*otherwise error*/
+		/*otherwise, pass an error*/
 		var error = new Error('Invalid request')
 		next(error);
 	}
@@ -193,7 +193,7 @@ app.use('GET', '/api/retrieve', function (req, res, next) {
 		res.end(JSON.stringify({id: 'test', result: 'success'}));
 	}
 	else {
-		/*otherwise continue to next route*/
+		/*otherwise, continue to the next route*/
 		next();
 	}
 });
@@ -206,7 +206,7 @@ app.use('GET', '/api/retrieve', function (req, res, next) {
 });
 
 app.use('/api/retrieve', function (req, res, next) {
-	/*now catch all requests to '/api/retrieve' route with methods other than GET
+	/*now catch all requests to '/api/retrieve' with methods other than GET
 	(since GET requests would have been handled by one of the routes above)*/
 	res.statusCode = 405;
 	res.end('Must use GET method');
