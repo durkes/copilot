@@ -176,7 +176,7 @@ var cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 var bodyParser = require('body-parser');
-app.use('POST', bodyParser.urlencoded());
+app.use('POST', bodyParser.urlencoded({extended: false}));
 /*only call bodyParser on POST requests*/
 
 /*Add custom routes*/
@@ -201,7 +201,8 @@ app.use('GET', '/api/retrieve', function (req, res, next) {
 app.use('GET', '/api/retrieve', function (req, res, next) {
 	res.statusCode = 400;
 	res.end('You must call this URL with the query string ?id=test');
-	/*efficient coding would include this logic in the route above; this is just for demo*/
+	/*efficient coding would include this logic in the route above;
+	this is just for demo*/
 	/*notice next() was not called here in order to break the chain*/
 });
 
@@ -218,7 +219,7 @@ app.use('/cause/an/error', function (req, res, next) {
 
 app.use(function (err, req, res, next) {
 	/*catch errors from any route above*/
-	/*notice this handler contains an extra 'err' parameter in the function declaration*/
+	/*notice the extra 'err' parameter in the function declaration*/
 	res.statusCode = 500;
 	res.end('Error: ' + err.message);
 });
@@ -237,8 +238,8 @@ app.use(function (req, res, next) {
 });
 
 app.use('*', '/', function (req, res, next) {
-	/*this more verbose route definition is functionally identical to the one above;
-	for demo purposes only*/
+	/*this more verbose route definition is functionally identical to the one
+	above; for demo purposes only*/
 	res.statusCode = 404;
 	res.end('Custom Not Found');
 });
@@ -271,12 +272,11 @@ For production environments, it is recommended that you implement custom logic w
  - [Express](https://www.npmjs.com/package/express) includes support for serving static files and rendering view templates
  - [Restify](https://www.npmjs.com/package/restify) includes built-in REST API functionality and helpers
  - Express and Restify support URL path parameters (e.g. /person/:*name*)
- - [Connect](https://www.npmjs.com/package/connect) does not support method-based routing
+ - [Connect](https://www.npmjs.com/package/connect) does not support HTTP method-based routing
 
 ## Mantra
  * Copilot is fast, lean, and flexible.
- * Copilot is not feature-rich.
- * Add features via middleware.
+ * Copilot is not feature-rich—add features via middleware.
  * Copilot must remain fast, lean, and flexible.
 
 ### License
