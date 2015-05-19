@@ -1,6 +1,6 @@
 # Copilot - Node.js middleware router
 
-Copilot is a lighter, faster [Node](http://nodejs.org/) router inspired by [Express](https://www.npmjs.com/package/express), [Restify](https://www.npmjs.com/package/restify), and [Connect](https://www.npmjs.com/package/connect). It was born out of a need for something in between. Much of the baseline code came from [Connect](https://www.npmjs.com/package/connect).
+Copilot is a lighter, faster [Node](http://nodejs.org/) router inspired by [Express](https://www.npmjs.com/package/express), [Restify](https://www.npmjs.com/package/restify), and [Connect](https://www.npmjs.com/package/connect). It was born out of a need for something in between. Much of the baseline code was derived from [Connect](https://www.npmjs.com/package/connect).
 
 The purpose of Copilot is to provide key conveniences for developing a Node server with the option to add middleware for additional functionality when you need it. Built-in features are limited by design. The configuration is flexible and unopinionated, keeping you first-in-command.
 
