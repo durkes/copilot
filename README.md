@@ -13,7 +13,6 @@ The purpose of Copilot is to provide key conveniences for developing a Node serv
  * [Middleware](#middleware)
  * [Fair warning](#fair-warning)
  * [How Copilot is different](#how-copilot-is-different)
- * [Mantra](#mantra)
 
 ## How to use Copilot
 
@@ -84,7 +83,7 @@ But requests to these URLs would **not match**:
 
 #### Route chaining
 **Order is important.**
-Since routing allows for prefix matching, it is important to define routes for nested paths first.
+Since routing allows for prefix matching, it might be important to define routes for nested paths first, depending on your intention.
 
 ```js
 app.use('/test/one', function (req, res, next) { ... });
@@ -95,8 +94,21 @@ In this example, requests to `http://www.example.com/test/one` will be handled b
 
 If the route definitions were in reverse order, requests to `http://www.example.com/test/one` would be handled by the `/test` route first.
 
+#### Multiple handlers
+For readability, multiple handlers can be registered on a route by placing them in an array.
+
+```js
+app.use('/multiple', [function one(req, res, next) { ... }, function two(req, res, next) { ... }]);
+```
+
+This is functionally identical to:
+```js
+app.use('/multiple', function one(req, res, next) { ... });
+app.use('/multiple', function two(req, res, next) { ... });
+```
+
 #### next()
-Within your route handler functions, you must either respond to requests using `res.end()` (or middleware), or call `next()` to invoke the next matching route. This enables you to create a waterfall effect.
+Within your route handler functions, you must either respond to requests using `res.end()` (or middleware), or call `next()` to invoke the next matching route handler. This enables you to create a waterfall effect.
 
 Consider the following two catch-all routes:
 ```js
@@ -179,12 +191,29 @@ var bodyParser = require('body-parser');
 app.use('POST', bodyParser.urlencoded({extended: false}));
 /*only call bodyParser on POST requests*/
 
+/*Custom middleware*/
+app.use(function (req, res, next) {
+	console.log();
+	console.log('req.route: ' + req.route);
+	console.log('req.path: ' + req.path);
+	console.log('req.query: ' + JSON.stringify(req.query));
+	next();
+});
+
 /*Add custom routes*/
 app.use('/hello', function (req, res, next) {
 	res.end('Hi there!');
 });
 /*the above route will answer all requests to:
 '/hello', '/hello.anything...', and '/hello/anything...'*/
+
+app.use('/multi/handler', [function (req, res, next) {
+	console.log('First handler');
+	next();
+}, function (req, res, next) {
+	res.end('Success');
+}]);
+/*the above route has two handler functions defined in an array*/
 
 app.use('GET', '/api/retrieve', function (req, res, next) {
 	if (req.query.id === 'test') {
@@ -216,6 +245,13 @@ app.use('/api/retrieve', function (req, res, next) {
 app.use('/cause/an/error', function (req, res, next) {
 	next(new Error('This is an error message.'));
 });
+
+app.use('/error/multi/handler', [function (req, res, next) {
+	console.log('First handler');
+	next(new Error('Skip to the error handler.'));
+}, function (req, res, next) {
+	res.end('Success');
+}]);
 
 app.use(function (err, req, res, next) {
 	/*catch errors from any route above*/
@@ -255,7 +291,7 @@ var server = http.createServer(app).listen(3000);
 ```
 
 ## Middleware
-In many cases your app will require functionality beyond Copilot's built-in capabilities. Middleware can be used to add functionality such as the ability to parse incoming POST data and cookies.
+In many cases, your app will require functionality beyond Copilot's built-in capabilities. Middleware can be used to add functionality such as the ability to parse incoming POST data and cookies.
 
 #### Recommended middleware
  - [body-parser](https://www.npmjs.com/package/body-parser)
@@ -264,7 +300,7 @@ In many cases your app will require functionality beyond Copilot's built-in capa
 Copilot is compatible with middleware for Express, Restify, and Connect.
 
 ## Fair warning
-Typically when an exception occurs in a Node app, the app crashes with the printed stack trace. With Copilot, however, if one of your routes throws an exception, the exception will be caught by the nearest error handler, keeping your app from crashing. This is good for obvious reasons, but can also be bad because it can allow misbehaving logic to go undetected.
+Typically, when an exception occurs in a Node app, the app crashes with the printed stack trace. With Copilot, however, if one of your routes throws an exception, the exception will be caught by the nearest error handler, keeping your app from crashing. This is good for obvious reasons, but can also allow misbehaving logic to go undetected.
 
 For production environments, it is recommended that you implement custom logic within your error handlers to log the stack trace (err.stack) of unexpected errors and generate a notification.
 
@@ -273,11 +309,7 @@ For production environments, it is recommended that you implement custom logic w
  - [Restify](https://www.npmjs.com/package/restify) includes built-in REST API functionality and helpers
  - Express and Restify support URL path parameters (e.g. /person/:*name*)
  - [Connect](https://www.npmjs.com/package/connect) does not support HTTP method-based routing
-
-## Mantra
- * Copilot is fast, lean, and flexible.
- * Copilot is not feature-rich—add features via middleware.
- * Copilot must remain fast, lean, and flexible.
+ - Copilot is faster and more flexible, but contains fewer built-in features
 
 ### License
 [MIT](LICENSE)
