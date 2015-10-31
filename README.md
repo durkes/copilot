@@ -8,6 +8,7 @@ The purpose of Copilot is to provide key conveniences for developing a Node serv
  * [How to use Copilot](#how-to-use-copilot)
  * [Routing](#routing)
  * [Request properties](#request-properties)
+ * [Responding to a request](#responding-to-a-request)
  * [Error handling](#error-handling)
  * [A thorough example](#a-thorough-example)
  * [Middleware](#middleware)
@@ -38,13 +39,12 @@ var server = http.createServer(app).listen(3000);	// launch the server
 
 /*Example handler functions*/
 function routeHandler(req, res, next) {
-	if (true) res.end('Hi there!');			// respond to request if condition true
+	if (true) res.send('Hi there!');		// respond to request if condition true
 	else next();							// otherwise, call next matching route
 }
 
 function errorHandler(err, req, res, next) {
-	res.statusCode = 500;
-	res.end(err.toString());				// responded, so do not call next()
+	res.send(err);          				// responded, so do not call next()
 }
 ```
 
@@ -108,14 +108,14 @@ app.use('/multiple', function two(req, res, next) { ... });
 ```
 
 #### next()
-Within your route handler functions, you must either respond to requests using `res.end()` (or middleware), or call `next()` to invoke the next matching route handler. This enables you to create a waterfall effect.
+Within your route handler functions, you must either respond to requests using `res.send()` or `res.end()`, or call `next()` to invoke the next matching route handler. This enables you to create a waterfall effect.
 
 Consider the following two catch-all routes:
 ```js
 app.use(function (req, res, next) {
 	var hour = new Date().getHours();
 	if (hour === 0) {
-		res.end('Down for maintenance');
+		res.send('Down for maintenance');
 	}
 	else {
 		next();
@@ -123,7 +123,7 @@ app.use(function (req, res, next) {
 });
 
 app.use(function (req, res, next) {
-	res.end('Hello!');
+	res.send('Hello!');
 });
 ```
 In this example, the first route will respond with "Down for maintenance" during the midnight hour. During other hours it will resolve to `next()` and invoke the second route to respond with "Hello!"
@@ -147,13 +147,30 @@ function routeHandler(req, res, next) {
 }
 ```
 
+## Responding to a request
+Copilot includes a `send` method to conveniently handle common response patterns. You can use `res.send()` anywhere you would normally use `res.end()` to send a text response, but with added functionality to send an object and change the response status code.
+
+Call `res.send()` __once per request__ from within a route handler.
+```js
+/*Examples*/
+res.send('Simple text response');
+res.send(404, 'Not Found');
+res.send(500); // No response body; status code only
+
+var json = {version: '1.0', code: 200, message: 'Success'};
+res.send(json);
+
+var error = new Error('Not Allowed');
+error.status = 405;
+res.send(error);
+```
+
 ## Error handling
 Error handlers are declared in the same way as a route handler, but with an additional `err` parameter.
 ```js
 app.use(errorHandler);
 function errorHandler(err, req, res, next) {
-	res.statusCode = err.status || 500;
-	res.end(err.toString());
+	res.send(err);
 }
 ```
 You should include at least one error handler (usually the very last route definition), but you can include multiple error handlers if you need errors to be handled differently throughout the route chain. When an error is thrown or passed to `next`, the next error handler in the chain will be invoked.
@@ -164,8 +181,7 @@ Inside a typical route, you can invoke the next error handler in the chain by ca
 app.use('GET', '/api/retrieve', function (req, res, next) {
 	if (req.query.id === 'test') {
 		/*respond only to /api/retrieve?id=test*/
-		res.setHeader('Content-Type', 'application/json');
-		res.end(JSON.stringify({id: 'test', result: 'success'}));
+		res.send({id: 'test', result: 'success'});
 	}
 	else {
 		/*otherwise, pass an error*/
@@ -202,7 +218,7 @@ app.use(function (req, res, next) {
 
 /*Add custom routes*/
 app.use('/hello', function (req, res, next) {
-	res.end('Hi there!');
+	res.send('Hi there!');
 });
 /*the above route will answer all requests to:
 '/hello', '/hello.anything...', and '/hello/anything...'*/
@@ -211,15 +227,14 @@ app.use('/multi/handler', [function (req, res, next) {
 	console.log('First handler');
 	next();
 }, function (req, res, next) {
-	res.end('Success');
+	res.send('Success');
 }]);
 /*the above route has two handler functions defined in an array*/
 
 app.use('GET', '/api/retrieve', function (req, res, next) {
 	if (req.query.id === 'test') {
 		/*respond only to /api/retrieve?id=test*/
-		res.setHeader('Content-Type', 'application/json');
-		res.end(JSON.stringify({id: 'test', result: 'success'}));
+		res.send({id: 'test', result: 'success'});
 	}
 	else {
 		/*otherwise, continue to the next route*/
@@ -228,8 +243,7 @@ app.use('GET', '/api/retrieve', function (req, res, next) {
 });
 
 app.use('GET', '/api/retrieve', function (req, res, next) {
-	res.statusCode = 400;
-	res.end('You must call this URL with the query string ?id=test');
+	res.send(400, 'You must call this URL with the query string ?id=test');
 	/*efficient coding would include this logic in the route above;
 	this is just for demo*/
 	/*notice next() was not called here in order to break the chain*/
@@ -238,8 +252,7 @@ app.use('GET', '/api/retrieve', function (req, res, next) {
 app.use('/api/retrieve', function (req, res, next) {
 	/*now catch all requests to '/api/retrieve' with methods other than GET
 	(since GET requests would have been handled by one of the routes above)*/
-	res.statusCode = 405;
-	res.end('Must use GET method');
+	res.send(405, 'Must use GET method');
 });
 
 app.use('/cause/an/error', function (req, res, next) {
@@ -250,14 +263,13 @@ app.use('/error/multi/handler', [function (req, res, next) {
 	console.log('First handler');
 	next(new Error('Skip to the error handler.'));
 }, function (req, res, next) {
-	res.end('Success');
+	res.send('This response will never occur.');
 }]);
 
 app.use(function (err, req, res, next) {
 	/*catch errors from any route above*/
 	/*notice the extra 'err' parameter in the function declaration*/
-	res.statusCode = 500;
-	res.end('Error: ' + err.message);
+	res.send(err);
 });
 
 app.use('POST', function (req, res, next) {
@@ -267,10 +279,59 @@ app.use('POST', function (req, res, next) {
 	next(error);
 });
 
+app.use('/send/text', function (req, res, next) {
+	res.send('Hello');
+});
+
+app.use('/send/json', function (req, res, next) {
+	res.send({status: 200, response: 'OK'});
+});
+
+app.use('/send/array', function (req, res, next) {
+	res.send([5, 4, 3, 2, 1, 'a', 'b', 'c']);
+});
+
+app.use('/send/status', function (req, res, next) {
+	res.send(201);
+});
+
+app.use('/send/status+text', function (req, res, next) {
+	res.send(201, 'Created');
+});
+
+app.use('/send/status+json', function (req, res, next) {
+	res.send(201, {response: 'Created'});
+});
+
+app.use('/send/error', function (req, res, next) {
+	var error = new Error('Test Error');
+	error.status = 555;
+	res.send(error);
+	/*same as res.send(555, 'Error: Test Error');*/
+});
+
+app.use('/send/error2', function (req, res, next) {
+	var error = new Error('Test Error');
+	error.name = 'Not Allowed';
+	error.status = 555;
+
+	/*override error status code*/
+	res.send(500, error);
+	/*same as res.send(500, 'Not Allowed: Test Error');*/
+});
+
+app.use('/send/error3', function (req, res, next) {
+	var error = new Error('Test Error');
+	error.status = 555;
+
+	/*remember that send(error) will NOT invoke the next error handler*/
+	/*but next(error) will*/
+	next(error);
+});
+
 app.use(function (req, res, next) {
 	/*catch all requests that made it this far*/
-	res.statusCode = 404;
-	res.end('Custom Not Found');
+	res.send(404, 'Custom Not Found');
 });
 
 app.use('*', '/', function (req, res, next) {
@@ -282,8 +343,9 @@ app.use('*', '/', function (req, res, next) {
 
 app.use(function (err, req, res, next) {
 	/*catch errors from routes below the last error handler*/
-	res.statusCode = err.status || 500;
-	res.end('Error: ' + err.message);
+	/*it is smart to log unexpected exceptions*/
+	console.error(err)
+	res.send(err);
 });
 
 /*launch the server*/
