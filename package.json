@@ -1,6 +1,6 @@
 {
   "name": "copilot",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Copilot is a lighter, faster Node router inspired by Express, Restify, and Connect.",
   "main": "index.js",
   "scripts": {
