@@ -3,6 +3,7 @@ examples/
 .gitignore
 .gitattributes
 *.md
+*.bat
 
 # Windows image file caches
 Thumbs.db
