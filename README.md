@@ -8,7 +8,7 @@ The purpose of Copilot is to provide key conveniences for developing a Node serv
  * [How to use Copilot](#how-to-use-copilot)
  * [Routing](#routing)
  * [Request properties](#request-properties)
- * [Responding to a request](#responding-to-a-request)
+ * [Responding to requests](#responding-to-requests)
  * [Error handling](#error-handling)
  * [A thorough example](#a-thorough-example)
  * [Middleware](#middleware)
@@ -147,7 +147,7 @@ function routeHandler(req, res, next) {
 }
 ```
 
-## Responding to a request
+## Responding to requests
 Copilot includes a `send` method to conveniently handle common response patterns. You can use `res.send()` anywhere you would normally use `res.end()` to send a text response, but with added functionality to send an object and change the response status code.
 
 Call `res.send()` __once per request__ from within a route handler.
