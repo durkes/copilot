@@ -148,7 +148,7 @@ app.use('*', '/', function (req, res, next) {
 app.use(function (err, req, res, next) {
 	/*catch errors from routes below the last error handler*/
 	/*it is smart to log unexpected exceptions*/
-	console.error(err)
+	console.error(err);
 	res.send(err);
 });
 
